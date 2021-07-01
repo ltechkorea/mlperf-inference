@@ -6,6 +6,10 @@ labels: bug
 assignees: ''
 ---
 
+<!--
+label에 해당 카테고리 추가해 주세요.
+-->
+
 ## **Describe the bug**
 
 > A clear and concise description of what the bug is.
