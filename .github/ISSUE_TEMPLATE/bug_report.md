@@ -1,7 +1,7 @@
 ---
 name: Bug report
-about: Benchmark Category
-title: ""
+about: Create Bug Report
+title: "[BUG] "
 labels: bug
 assignees: ''
 ---
