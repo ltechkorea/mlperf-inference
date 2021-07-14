@@ -4,7 +4,7 @@
 SUBMIT_ORGANIZATION="LTechKorea"
 SYSTEM="L4210S-10G"
 SUBMISSION_DIR=/opt/data/$SUBMIT_ORGANIZATION
-DEVISION="closed"
+DIVISION="closed"
 DEVICE="gpu"
 
 # ** 작업 디렉토리, 메인 디렉토리, dataset 디렉토리 **

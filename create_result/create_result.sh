@@ -17,10 +17,10 @@ do
         # performance 벤치마크 실행
         ./run_and_time.sh $FRAMEWORK $BENCHMARK $DEVICE --scenario $scenario $OPT
         # 벤치마크 결과 제출디렉토리 생성
-        mkdir -p $SUBMISSION_DIR/$DEVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/performance/run_$n
+        mkdir -p $SUBMISSION_DIR/$DIVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/performance/run_$n
         # mlperf_log_summary.txt, mlperf_log_detail.txt 제줄 디렉토리로 이동
-        mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_summary.txt $SUBMISSION_DIR/$DEVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/performance/run_$n/
-        mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_detail.txt $SUBMISSION_DIR/$DEVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/performance/run_$n/
+        mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_summary.txt $SUBMISSION_DIR/$DIVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/performance/run_$n/
+        mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_detail.txt $SUBMISSION_DIR/$DIVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/performance/run_$n/
     done
 
     echo '==================== Accuracy ======================='
@@ -31,10 +31,10 @@ do
     python3 $WORK_DIR/tools/accuracy-imagenet.py --mlperf-accuracy-file $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_accuracy.json --imagenet-val-file $DATA_DIR/val_map.txt > $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/accuracy.txt
     
     # mlperf_log_summary.txt, mlperf_log_detail.txt, mlperf_log_accuracy.json 제출디렉토리로 이동
-    mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_summary.txt $SUBMISSION_DIR/$DEVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/accuracy/
-    mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_detail.txt $SUBMISSION_DIR/$DEVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/accuracy/
-    mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_accuracy.json $SUBMISSION_DIR/$DEVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/accuracy/
-    mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/accuracy.txt $SUBMISSION_DIR/$DEVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/accuracy/
+    mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_summary.txt $SUBMISSION_DIR/$DIVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/accuracy/
+    mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_detail.txt $SUBMISSION_DIR/$DIVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/accuracy/
+    mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/mlperf_log_accuracy.json $SUBMISSION_DIR/$DIVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/accuracy/
+    mv $WORK_DIR/output/$FRAMEWORK-$DEVICE/$BENCHMARK/accuracy.txt $SUBMISSION_DIR/$DIVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario/accuracy/
 done
 
 echo '==================TEST01========================'
@@ -48,8 +48,8 @@ do
 
     # run_verification.py 로 audit.config로 실행한것과 기존테스트 비교
     python3 $MLPERF_DIR/compliance/nvidia/TEST01/run_verification.py \
-        -r $SUBMISSION_DIR/$DEVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario \
+        -r $SUBMISSION_DIR/$DIVISION/results/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario \
         -c $WORK_DIR/output/tf-gpu/resnet50 \
-        -o $SUBMISSION_DIR/$DEVISION/compliance/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario
+        -o $SUBMISSION_DIR/$DIVISION/compliance/$SUBMIT_ORGANIZATION-$SYSTEM/$BENCHMARK/$scenario
 done
 rm $WORK_DIR/audit.config
