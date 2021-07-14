@@ -1197,7 +1197,7 @@ def read_dist_from_file(file_path):
         with open(file_path, "r") as f:
             lines = f.read().splitlines()
     except Exception:
-        print("Wrong file or file path")
+        print("{file_path} Wrong file or file path")
     # read unique accesses
     unique_accesses = [int(el) for el in lines[0].split(", ")]
     # read cumulative distribution (elements are passed as two separate lists)

@@ -45,12 +45,16 @@ RUN pip install -U scikit-learn
 
 
 RUN cd /tmp && \
-    git clone --recurse-submodules https://github.com/mlcommons/inference && \
-    cd inference/loadgen && \
+    git clone --recurse-submodules https://github.com/ltechkorea/mlperf-inference.git && \
+    cd mlperf-inference/loadgen && \
     CFLAGS="-std=c++14" python setup.py install && \
     cd ../../ && \
-    rm -rf inference
-    
+    rm -rf mlperf-inference
+
+RUN git clone https://github.com/mlperf/logging.git mlperf-logging &&\
+      pip install -e mlperf-logging
+
+
 RUN  echo "/usr/local/cuda/compat" >> /etc/ld.so.conf.d/cuda-10-0.conf && \
     ldconfig
 
