@@ -25,7 +25,8 @@ CONTAINER_VOL ?= /workspace
 
 BUILD_DIR := build
 ifndef DOWNLOAD_DATA_DIR
-	export DOWNLOAD_DATA_DIR := $(HOST_VOL)/$(BUILD_DIR)/MICCAI_BraTS_2019_Data_Training
+	#export DOWNLOAD_DATA_DIR := $(HOST_VOL)/$(BUILD_DIR)/MICCAI_BraTS_2019_Data_Training
+	export DOWNLOAD_DATA_DIR := /opt/data/Dataset/BraTS_2019_Data_Training/MICCAI_BraTS_2019_Data_Training
 endif
 RAW_DATA_DIR := $(BUILD_DIR)/raw_data
 PREPROCESSED_DATA_DIR := $(BUILD_DIR)/preprocessed_data
@@ -160,12 +161,51 @@ launch_docker: check_download_data_dir
 	@mkdir -p $(POSTPROCESSED_DATA_DIR)
 	@echo "Launching docker container..."
 	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
+		-e CUDA_VISIBLE_DEVICES=3 \
 		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
 		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
 		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
 		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
 		--name mlperf-inference-3d-unet-$(UNAME) -h mlperf-inference-3d-unet-$(UNAME) --add-host mlperf-inference-3d-unet-$(UNAME):127.0.0.1 \
 		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet
+
+.PHONY: performance-run
+performance-run: check_download_data_dir build_docker
+	#@mkdir -p $(POSTPROCESSED_DATA_DIR)
+	@echo "Performance run docker container..."
+	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
+		-e CUDA_VISIBLE_DEVICES=3 \
+		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
+		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
+		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
+		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
+		--name mlperf-inference-3d-unet-$(UNAME) -h mlperf-inference-3d-unet-$(UNAME) --add-host mlperf-inference-3d-unet-$(UNAME):127.0.0.1 \
+		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet \
+		make run_pytorch_performance
+
+.PHONY: accuracy-run
+accuracy-run: check_download_data_dir build_docker
+	#@mkdir -p $(POSTPROCESSED_DATA_DIR)
+	@echo "Accuracy run docker container..."
+	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
+		-e CUDA_VISIBLE_DEVICES=3 \
+		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
+		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
+		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
+		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
+		--name mlperf-inference-3d-unet-$(UNAME) -h mlperf-inference-3d-unet-$(UNAME) --add-host mlperf-inference-3d-unet-$(UNAME):127.0.0.1 \
+		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet \
+		make run_pytorch_accuracy
+	@echo "Accuracy-brats run docker container..."
+	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
+		-e CUDA_VISIBLE_DEVICES=3 \
+		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
+		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
+		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
+		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
+		--name mlperf-inference-3d-unet-$(UNAME) -h mlperf-inference-3d-unet-$(UNAME) --add-host mlperf-inference-3d-unet-$(UNAME):127.0.0.1 \
+		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet \
+		make evaluate 2>&1 | tee out.log
 
 .PHONY: preprocess_data
 preprocess_data: create_directories
