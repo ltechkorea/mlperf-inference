@@ -53,15 +53,18 @@
             "redirect_output        - if True redirect to console all output, if False - only errors (Optional)"
         ],
 
-        "logs_dir": "/opt/data/sangwoo/mlperf_logs",
-        "dtype": "int8",
+        "logs_dir": "/opt/data/jay/mlperf_logs",
+        "dtype": "float32",
         "accuracy": "99.9",
         "scenario": "Offline",
         "system": "L4210S-10G",
         "topology": "3d-unet",
-        "env": [ { "LD_LIBRARY_PATH": "$LD_LIBRARY_PATH:/root/git/mlperf_ext_ov_cpp_v1.0/lib_3d_unet" } ],
-        "mlperf_path": "./",
-        "redirect_output": "False",
+        "env": [
+          { "LD_LIBRARY_PATH": "$LD_LIBRARY_PATH:/root/git/mlperf_ext_ov_cpp_v1.0/lib_3d_unet" },
+          { "MLPERF_DIR": "/home/jay/work/mlperf-inference" }
+        ],
+        "mlperf_path": "/home/jay/work/mlperf-inference",
+        "redirect_output": "True",
 
         "comment_exec": [
             "name                   - string to display while running script (Required)",
@@ -115,7 +118,7 @@
 
             {
                 "name": "Verification TEST01",
-                "cmd": "$PYTHON $MLPERF_COMPL/TEST01/run_verification.py -r $RESULTS_DIR -c $TEST01_TMP_DIR -o $COMPLIANCE_DIR --dtype float16"
+                "cmd": "$PYTHON $MLPERF_COMPL/TEST01/run_verification.py -r $RESULTS_DIR -c $TEST01_TMP_DIR -o $COMPLIANCE_DIR --dtype float32"
             },
 
             {
@@ -140,13 +143,11 @@
 
         "aliases": {
             "$PYTHON": "/usr/bin/python3",
-            "$MLPERF_SRC_TOP": "/home/sangwoo/mlperf-inference",
-            "$MLPERF_COMPL": "/home/sangwoo/mlperf-inference/compliance/nvidia",
-	          "$RUNNER_DIR": "/home/sangwoo/mlperf-inference/tools/submission_runner",
-	          "$WORK_DIR": "/home/sangwoo/mlperf-inference/vision/medical_imaging/3d-unet-brats19",
-	          "$BUILD_DIR": "/home/sangwoo/mlperf-inference/vision/medical_imaging/3d-unet-brats19/build",
+            "$MLPERF_COMPL": "/home/jay/work/mlperf-inference/compliance/nvidia",
+	          "$RUNNER_DIR": "/home/jay/work/mlperf-inference/tools/submission_runner",
+	          "$WORK_DIR": "/home/jay/work/mlperf-inference/vision/medical_imaging/3d-unet-brats19",
+	          "$BUILD_DIR": "/home/jay/work/mlperf-inference/vision/medical_imaging/3d-unet-brats19/build",
 	          "$DATA_DIR": "/opt/data/Dataset/BraTS_2019_Data_Training/MICCAI_BraTS_2019_Data_Training"
-
         }
     }
 }

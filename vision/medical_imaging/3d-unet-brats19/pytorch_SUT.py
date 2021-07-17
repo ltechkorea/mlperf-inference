@@ -46,6 +46,7 @@ class _3DUNET_PyTorch_SUT():
 
     def issue_queries(self, query_samples):
         with torch.no_grad():
+            print("JAY: Sample {:d}".format(len(query_samples)))
             for i in range(len(query_samples)):
                 data = self.qsl.get_features(query_samples[i].index)
 
