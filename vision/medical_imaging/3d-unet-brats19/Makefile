@@ -153,7 +153,8 @@ build_docker:
 	@docker pull nvcr.io/nvidia/pytorch:20.03-py3
 	@docker build --build-arg GID=$(GROUPID) --build-arg UID=$(UID) --build-arg GROUP=$(GROUPNAME) --build-arg USER=$(UNAME) \
 	--build-arg http_proxy=$(HTTP_PROXY) --build-arg https_proxy=$(HTTPS_PROXY) --build-arg HTTPS_PROXY=$(HTTPS_PROXY) --build-arg HTTP_PROXY=$(HTTP_PROXY) \
-        --build-arg BASE_IMAGE=nvcr.io/nvidia/pytorch:20.03-py3 -t mlperf-inference-3d-unet -f Dockerfile .
+	--build-arg BASE_IMAGE=nvcr.io/nvidia/pytorch:20.03-py3 -t mlperf-inference-3d-unet:latest -f Dockerfile .
+	@docker tag mlperf-inference-3d-unet:latest mlperf-inference-3d-unet:${USER}
 
 .PHONY: launch_docker
 launch_docker: check_download_data_dir
