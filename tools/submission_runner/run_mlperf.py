@@ -31,9 +31,8 @@ def getInputParameters():
 
 def run_process(args, dir, env, redirect_output):
     output = ""
-    print('JAY: args: {}'.format(args))
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         bufsize=1, universal_newlines=True, cwd=dir, env=env)
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, 
+                         bufsize=1, universal_newlines=True, cwd=dir, env=env) 
     while True:
       data = process.stdout.readline()
       if data == '' and process.poll() is not None :

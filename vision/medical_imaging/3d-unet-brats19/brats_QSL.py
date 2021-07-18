@@ -32,7 +32,6 @@ class BraTS_2019_QSL():
             self.preprocess_files = pickle.load(f)
 
         self.count = len(self.preprocess_files)
-        print("JAY: self.count: {:d}".format(self.count))
         self.perf_count = perf_count if perf_count is not None else self.count
         print("Found {:d} preprocessed files".format(self.count))
         print("Using performance count = {:d}".format(self.perf_count))

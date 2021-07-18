@@ -23,24 +23,17 @@ GROUPID := $(shell id -g `whoami`)
 HOST_VOL ?= ${PWD}
 CONTAINER_VOL ?= /workspace
 
-DATASET_VOL ?= /opt/data/Dataset/BraTS_2019_Data_Training
-
 BUILD_DIR := build
-
 ifndef DOWNLOAD_DATA_DIR
-	export DOWNLOAD_DATA_DIR := $(DATASET_VOL)/MICCAI_BraTS_2019_Data_Training
+	export DOWNLOAD_DATA_DIR := $(HOST_VOL)/$(BUILD_DIR)/MICCAI_BraTS_2019_Data_Training
 endif
-ifneq ($(TEST_RUN),)
-	DOWNLOAD_DATA_DIR := $(DATASET_VOL)/test-data
-endif
-
 RAW_DATA_DIR := $(BUILD_DIR)/raw_data
 PREPROCESSED_DATA_DIR := $(BUILD_DIR)/preprocessed_data
 POSTPROCESSED_DATA_DIR := $(BUILD_DIR)/postprocessed_data
-MODEL_DIR := "/opt/data/Model/medical-imaging"
+MODEL_DIR := $(BUILD_DIR)/model
 RESULT_DIR := $(BUILD_DIR)/result
 MLPERF_CONF := $(BUILD_DIR)/mlperf.conf
-PYTORCH_MODEL := $(MODEL_DIR)/fold_1.zip
+PYTORCH_MODEL := $(RESULT_DIR)/fold_1.zip
 ONNX_MODEL := $(MODEL_DIR)/224_224_160.onnx
 ONNX_DYNAMIC_BS_MODEL := $(MODEL_DIR)/224_224_160_dynamic_bs.onnx
 TF_MODEL := $(MODEL_DIR)/224_224_160.pb
@@ -71,10 +64,6 @@ setup: check_download_data_dir create_directories
 	@if [ ! -e $(MLPERF_CONF) ]; then \
 		cp ../../../mlperf.conf $(MLPERF_CONF); \
 	fi
-	@if [ ! -z $(TEST_RUN) ]; then \
-		sed -i 's/Offline.min_query_count = 24576/Offline.min_query_count = 64/g' $(MLPERF_CONF); \
-	fi
-
 	@$(MAKE) -f $(MAKEFILE_NAME) init_submodule
 	@$(MAKE) -f $(MAKEFILE_NAME) download_model
 
@@ -83,18 +72,17 @@ check_download_data_dir:
 	@if [ ! -e $(DOWNLOAD_DATA_DIR) ]; then \
 		echo "Please set environment variable DOWNLOAD_DATA_DIR to <path/to/MICCAI_BraTS_2019_Data_Training>" && false ; \
 	fi
-	@echo "DOWNLOAD_DATA_DIR: ${DOWNLOAD_DATA_DIR}"
 
 .PHONY: create_directories
 create_directories:
 	@if [ ! -e $(BUILD_DIR) ]; then \
-		mkdir -p $(BUILD_DIR); \
+		mkdir $(BUILD_DIR); \
 	fi
 	@if [ ! -e $(MODEL_DIR) ]; then \
-		mkdir -p $(MODEL_DIR); \
+		mkdir $(MODEL_DIR); \
 	fi
 	@if [ ! -e $(RESULT_DIR) ]; then \
-		mkdir -p $(RESULT_DIR); \
+		mkdir $(RESULT_DIR); \
 	fi
 
 .PHONY: init_submodule
@@ -114,9 +102,9 @@ download_model:
 download_pytorch_model: create_directories
 	@echo "Downloading PyTorch model from Zenodo..."
 	@if [ ! -e $(PYTORCH_MODEL) ]; then \
-		wget -O $(PYTORCH_MODEL) https://zenodo.org/record/3904106/files/fold_1.zip?download=1; \
+		wget -O $(PYTORCH_MODEL) https://zenodo.org/record/3904106/files/fold_1.zip?download=1 \
+		&& cd $(RESULT_DIR) && unzip -o fold_1.zip; \
 	fi
-	@cd $(RESULT_DIR) && unzip -o ${PYTORCH_MODEL}
 
 .PHONY: download_onnx_model
 download_onnx_model: create_directories
@@ -165,63 +153,22 @@ build_docker:
 	@docker pull nvcr.io/nvidia/pytorch:20.03-py3
 	@docker build --build-arg GID=$(GROUPID) --build-arg UID=$(UID) --build-arg GROUP=$(GROUPNAME) --build-arg USER=$(UNAME) \
 	--build-arg http_proxy=$(HTTP_PROXY) --build-arg https_proxy=$(HTTPS_PROXY) --build-arg HTTPS_PROXY=$(HTTPS_PROXY) --build-arg HTTP_PROXY=$(HTTP_PROXY) \
-	--build-arg BASE_IMAGE=nvcr.io/nvidia/pytorch:20.03-py3 -t mlperf-inference-3d-unet:${USER} -f Dockerfile .
+        --build-arg BASE_IMAGE=nvcr.io/nvidia/pytorch:20.03-py3 -t mlperf-inference-3d-unet -f Dockerfile .
 
 .PHONY: launch_docker
 launch_docker: check_download_data_dir
 	@mkdir -p $(POSTPROCESSED_DATA_DIR)
 	@echo "Launching docker container..."
 	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
-		-e CUDA_VISIBLE_DEVICES=3 \
 		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
 		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
 		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
 		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
 		--name mlperf-inference-3d-unet-$(UNAME) -h mlperf-inference-3d-unet-$(UNAME) --add-host mlperf-inference-3d-unet-$(UNAME):127.0.0.1 \
-		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet:${USER}
-
-.PHONY: preprocess-run
-preprocess-run: check_download_data_dir build_docker
-	@echo "preprocess run docker container..."
-	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
-		-e CUDA_VISIBLE_DEVICES=3 \
-		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
-		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
-		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
-		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
-		--name mlperf-inference-3d-unet-$(UNAME) -h mlperf-inference-3d-unet-$(UNAME) --add-host mlperf-inference-3d-unet-$(UNAME):127.0.0.1 \
-		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet \
-		make preprocess_data
-
-.PHONY: performance-run
-performance-run: check_download_data_dir build_docker
-	#@mkdir -p $(POSTPROCESSED_DATA_DIR)
-	@echo "Performance run docker container..."
-	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
-		-e CUDA_VISIBLE_DEVICES=3 \
-		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
-		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
-		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
-		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
-		--name mlperf-inference-3d-unet-$(UNAME) -h mlperf-inference-3d-unet-$(UNAME) --add-host mlperf-inference-3d-unet-$(UNAME):127.0.0.1 \
-		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet \
-		make run_pytorch_performance
-
-.PHONY: accuracy-run
-accuracy-run: check_download_data_dir build_docker
-	@echo "Accuracy run docker container..."
-	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
-		-e CUDA_VISIBLE_DEVICES=3 \
-		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
-		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
-		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
-		--security-opt apparmor=unconfined --security-opt seccomp=unconfined \
-		--name mlperf-inference-3d-unet-$(UNAME) -h mlperf-inference-3d-unet-$(UNAME) --add-host mlperf-inference-3d-unet-$(UNAME):127.0.0.1 \
-		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet \
-		make run_pytorch_accuracy
+		--user $(UID):$(GROUPID) --net host --device /dev/fuse --cap-add SYS_ADMIN $(DOCKER_ARGS) mlperf-inference-3d-unet
 
 .PHONY: preprocess_data
-preprocess_data:
+preprocess_data: create_directories
 	@echo "Restructuring raw data to $(RAW_DATA_DIR)..."
 	@if [ ! -e $(RAW_DATA_DIR) ]; then \
 		mkdir $(RAW_DATA_DIR); \

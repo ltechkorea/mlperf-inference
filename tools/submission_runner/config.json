@@ -2,15 +2,15 @@
     "comment": "Copy JSON file with  system description and add required config section, see below",
 
     "division": "closed",
-    "submitter": "LtechKorea",
+    "submitter": "Intel",
     "status": "preview",
     "system_type":"datacenter",
-    "system_name": "L4210S-10G_Pytorch_Int8",
+    "system_name": "1-node-2S-ICX-OpenVINO-INT8",
 
     "number_of_nodes": "1",
     "host_processor_model_name": "TBD",
     "host_processors_per_node": "2",
-    "host_processor_core_count": "56",
+    "host_processor_core_count": "40",
     "host_processor_frequency": "",
     "host_processor_caches": "",
     "host_memory_configuration": "8 slots / 32GB each / 3200 MT/s per socket",
@@ -33,7 +33,7 @@
     "cooling": "",
     "hw_notes": "",
 
-    "framework": "Pytorch",
+    "framework": "OpenVINO",
     "operating_system": "Ubuntu 20.04.1 LTS",
     "other_software_stack": "5.4.0-45-generic",
     "sw_notes": "",
@@ -53,18 +53,15 @@
             "redirect_output        - if True redirect to console all output, if False - only errors (Optional)"
         ],
 
-        "logs_dir": "/opt/data/jay/mlperf_logs",
-        "dtype": "float32",
+        "logs_dir": "/root/mlperf_logs",
+        "dtype": "int8",
         "accuracy": "99.9",
         "scenario": "Offline",
-        "system": "L4210S-10G",
+        "system": "1-node-2S-ICX",
         "topology": "3d-unet",
-        "env": [
-          { "LD_LIBRARY_PATH": "$LD_LIBRARY_PATH:/root/git/mlperf_ext_ov_cpp_v1.0/lib_3d_unet" },
-          { "MLPERF_DIR": "/home/jay/work/mlperf-inference" }
-        ],
-        "mlperf_path": "/home/jay/work/mlperf-inference",
-        "redirect_output": "True",
+        "env": [ { "LD_LIBRARY_PATH": "$LD_LIBRARY_PATH:/root/git/mlperf_ext_ov_cpp_v1.0/lib_3d_unet" } ],
+        "mlperf_path": "/root/git/inference",
+        "redirect_output": "False",
 
         "comment_exec": [
             "name                   - string to display while running script (Required)",
@@ -76,44 +73,45 @@
         "exec": [
             {
                 "name": "Performace benchmark",
-                "cmd": "$RUNNER_DIR/run-3d-unet.sh",
+                "cmd": "$EXEC -m $DATA/model/3d_unet_model_i8.xml -data $DATA/preprocessed_data/preprocessed_files.pkl -mlperf_conf $DATA/mlperf.conf -user_conf $DATA/user.conf -scenario Offline -streams 8",
                 "dir": "$PERFORMANCE/RUN_1_DIR"
+            },
+            
+            {
+                "name": "Accuracy benchmark",
+                "cmd": "$EXEC -m $DATA/model/3d_unet_model_i8.xml -data $DATA/preprocessed_data/preprocessed_files.pkl -mlperf_conf $DATA/mlperf.conf -user_conf $DATA/user.conf -scenario Offline -streams 8 -mode Accuracy",
+                "dir": "$ACCURACY_DIR"
             },
 
             {
-                "name": "Accuracy benchmark",
-                "cmd": "$RUNNER_DIR/run-3d-unet.sh accuracy",
-                "dir": "$ACCURACY_DIR"
-            },
-            {
                 "name": "Accuracy check",
-                "cmd": "$PYTHON $WORK_DIR/accuracy-brats.py --log_file $ACCURACY_DIR/mlperf_log_accuracy.json --preprocessed_data_dir $BUILD_DIR/preprocessed_data --postprocessed_data_dir $BUILD_DIR/postprocessed_data --label_data_dir $BUILD_DIR/raw_data/nnUNet_raw_data/Task043_BraTS2019/labelsTr --output_dtype float16",
+                "cmd": "$PYTHON $MLPERF/vision/medical_imaging/3d-unet/accuracy-brats.py --log_file $ACCURACY_DIR/mlperf_log_accuracy.json --preprocessed_data_dir $DATA/preprocessed_data --postprocessed_data_dir $DATA/postprocessed_data --label_data_dir $DATA/nnUNet_raw_data/Task043_BraTS2019/labelsTr --output_dtype float32",
                 "dir": "$ACCURACY_DIR",
                 "save_output": "accuracy.txt"
             },
-
+            
             {
                 "name": "Compliance TEST01",
                 "dir": "$TEST01_TMP_DIR",
-                "cmd": "$RUNNER_DIR/run-3d-unet.sh TEST01"
+                "cmd": "$EXEC -m $DATA/model/3d_unet_model_i8.xml -data $DATA/preprocessed_data/preprocessed_files.pkl -mlperf_conf $DATA/mlperf.conf -user_conf $DATA/user.conf -scenario Offline -streams 8"
             },
 
             {
                 "name": "Compliance TEST04-A",
                 "dir": "$TEST04-A_TMP_DIR",
-                "cmd": "$RUNNER_DIR/run-3d-unet.sh TEST04-A"
+                "cmd": "$EXEC -m $DATA/model/3d_unet_model_i8.xml -data $DATA/preprocessed_data/preprocessed_files.pkl -mlperf_conf $DATA/mlperf.conf -user_conf $DATA/user.conf -scenario Offline -streams 8"
             },
 
             {
                 "name": "Compliance TEST04-B",
                 "dir": "$TEST04-B_TMP_DIR",
-                "cmd": "$RUNNER_DIR/run-3d-unet.sh TEST04-B"
+                "cmd": "$EXEC -m $DATA/model/3d_unet_model_i8.xml -data $DATA/preprocessed_data/preprocessed_files.pkl -mlperf_conf $DATA/mlperf.conf -user_conf $DATA/user.conf -scenario Offline -streams 8"
             },
 
             {
                 "name": "Compliance TEST05",
                 "dir": "$TEST05_TMP_DIR",
-                "cmd": "$RUNNER_DIR/run-3d-unet.sh TEST05"
+                "cmd": "$EXEC -m $DATA/model/3d_unet_model_i8.xml -data $DATA/preprocessed_data/preprocessed_files.pkl -mlperf_conf $DATA/mlperf.conf -user_conf $DATA/user.conf -scenario Offline -streams 8"
             },
 
             {
@@ -143,11 +141,10 @@
 
         "aliases": {
             "$PYTHON": "/usr/bin/python3",
-            "$MLPERF_COMPL": "/home/jay/work/mlperf-inference/compliance/nvidia",
-	          "$RUNNER_DIR": "/home/jay/work/mlperf-inference/tools/submission_runner",
-	          "$WORK_DIR": "/home/jay/work/mlperf-inference/vision/medical_imaging/3d-unet-brats19",
-	          "$BUILD_DIR": "/home/jay/work/mlperf-inference/vision/medical_imaging/3d-unet-brats19/build",
-	          "$DATA_DIR": "/opt/data/Dataset/BraTS_2019_Data_Training/MICCAI_BraTS_2019_Data_Training"
+            "$MLPERF_COMPL": "/root/git/inference/compliance/nvidia",
+            "$MLPERF": "/root/git/inference",
+            "$EXEC": "/root/git/mlperf_ext_ov_cpp_v1.0/Release/ov_mlperf_3d_unet",
+            "$DATA": "/root/data/3d-unet"
         }
     }
 }
