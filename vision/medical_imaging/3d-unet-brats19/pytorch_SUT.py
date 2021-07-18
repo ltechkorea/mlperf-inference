@@ -50,7 +50,7 @@ class _3DUNET_PyTorch_SUT():
             for i in range(len(query_samples)):
                 data = self.qsl.get_features(query_samples[i].index)
 
-                print("Processing sample id {:d} with shape = {:}".format(query_samples[i].index, data.shape))
+                print("[{:d}] Processing sample id {:d} with shape = {:}".format(i, query_samples[i].index, data.shape))
 
                 image = torch.from_numpy(data[np.newaxis,...]).float().to(self.device)
                 output = self.trainer.network(image)[0].cpu().numpy().astype(np.float16)

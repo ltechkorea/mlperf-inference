@@ -51,6 +51,8 @@ OPENVINO_MODEL_METADATA := $(MODEL_DIR)/brats_model_checkpoint_final_fold1_H224_
 export nnUNet_raw_data_base=$(RAW_DATA_DIR)
 export nnUNet_preprocessed=$(PREPROCESSED_DATA_DIR)
 export RESULTS_FOLDER=$(RESULT_DIR)
+#export USE_GPUS="3"
+export USE_GPUS="0,1,2,3,4,5,6,7"
 
 HAS_GPU := $(shell command -v nvidia-smi 2> /dev/null)
 
@@ -173,7 +175,7 @@ launch_docker: check_download_data_dir
 	@mkdir -p $(POSTPROCESSED_DATA_DIR)
 	@echo "Launching docker container..."
 	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
-		-e CUDA_VISIBLE_DEVICES=3 \
+		-e CUDA_VISIBLE_DEVICES=$(USE_GPUS) \
 		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
 		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
 		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
@@ -185,7 +187,7 @@ launch_docker: check_download_data_dir
 preprocess-run: check_download_data_dir build_docker
 	@echo "preprocess run docker container..."
 	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
-		-e CUDA_VISIBLE_DEVICES=3 \
+		-e CUDA_VISIBLE_DEVICES=$(USE_GPUS) \
 		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
 		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
 		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
@@ -199,7 +201,7 @@ performance-run: check_download_data_dir build_docker
 	#@mkdir -p $(POSTPROCESSED_DATA_DIR)
 	@echo "Performance run docker container..."
 	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
-		-e CUDA_VISIBLE_DEVICES=3 \
+		-e CUDA_VISIBLE_DEVICES=$(USE_GPUS) \
 		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
 		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
 		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
@@ -212,7 +214,7 @@ performance-run: check_download_data_dir build_docker
 accuracy-run: check_download_data_dir build_docker
 	@echo "Accuracy run docker container..."
 	@$(DOCKER_RUN_CMD) --rm -it -w $(CONTAINER_VOL) -v $(HOST_VOL):$(CONTAINER_VOL) -v ${HOME}:/mnt/${HOME} \
-		-e CUDA_VISIBLE_DEVICES=3 \
+		-e CUDA_VISIBLE_DEVICES=$(USE_GPUS) \
 		-v $(DOWNLOAD_DATA_DIR):/downloaded_data_dir \
 		--shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 \
 		-v /etc/timezone:/etc/timezone:ro -v /etc/localtime:/etc/localtime:ro \
